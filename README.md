@@ -1,76 +1,74 @@
 # Sqlment
 
-Sqlment (siːkwəl.mənt) is a simpler but surprisingly powerful query builder for TypeScript.
+Sqlment is a lightweight query builder for TypeScript. It tries to capture some of the power of more complex builders while sticking closer to hand-written SQL.
 
-At a glance:
-
-```js
-import { Sqlment } from "sqlment";
-import { postgresql } from "sqlment/postgresql";
-
-// Create a new factory, passing a configuration object.
-const sqlment = new Sqlment(postgresql);
-
-// Build the starter functions.
-const { sql, from, limit } = sqlment.starters();
-
-// Start a query.
-const posts = from`posts`.select`posts.*`;
-
-// Merge with another query.
-posts.merge(
-  join`pageviews on posts.id = pageviews.post_id`
-    .select`count(pageviews.*) as pageviews`.group`posts`.order`pageviews desc`,
-);
-
-// Mutate the query.
-posts.where`posts.published_at = ${Date.now()}`;
-
-// Use a subquery.
-(posts.where`posts.author_id in (${sql`select id from authors where is_active`})`,
-  // Get the final query.
-  posts.toQuery()); //=> ["select posts.*, count(pageviews.*) as pageviews from posts join pageviews on posts.id = pageviews.post_id where posts.published_at = ? and posts.author_id in (select id from authors where is_active) group by posts order by pageviews desc", Date.now()]
-```
-
-Some of the highlights:
-
-- Zero dependencies.
-- Bring your own driver.
-- Build queries from composable clauses.
-- Mutate queries use chained calls.
-- Support subqueries.
-- Configurable for different SQL dialects.
+- 🪶 Zero dependencies.
+- 👨‍✈️ Bring your own driver.
+- 🧱 Compose queries by combining clauses.
+- 🔗 Mutate queries with chained calls.
+- 🪆 Support for nested clauses and subqueries.
+- 🗣️ Configurable for almost any SQL dialect.
 
 ## Usage
 
-Install the package:
+Create a new factory, passing a configuration object:
 
-```sh
-npm install sqlment
-```
-
-Create a module to export starter functions:
-
-```ts
-// lib/sql.ts
-
+```js
 import { Sqlment } from "sqlment";
-import { postgresql } from "sqlment/postgresql";
+import { sqlite } from "sqlment/sqlite";
 
-const sqlment = new Sqlment(postgresql);
-export const { sql, from, insert, update, delete: del } = sqlment.starters();
+const sqlment = new Sqlment(sqlite);
 ```
 
-Import from the module to create queries:
+You create queries via starter functions, and compile with `toQuery()` method:
 
-```ts
-// app.ts
+```js
+const { sql, select, ... } = sqlment.starters();
 
-import { db } from "./lib/database";
-import { sql } from "./lib/sql";
+sql`select * from posts`
+  .toQuery() //=> ["select * from posts"];
+```
 
-const query = sql`select * from table`;
-const results = await db.exec(query.toQuery());
+Queries are mutable and methods are chainable:
+
+```js
+select`*`.from`posts`.where`author_id = ${1}`
+  .toQuery(); //=> ["select * from posts where author_id = ?", 1];
+```
+
+Queries can be merged:
+
+```js
+const withAuthor = select`authors.name as author`
+  .join`authors on posts.author_id = authors.id`;
+
+select`posts.*`.from`posts`.merge(withAuthor)
+  .toQuery(); //=> ["select posts.*, authors.name as author from posts join authors on posts.author_id = authors.id"];
+```
+
+Doesn't matter which order calls are made:
+
+```js
+from`posts`.limit(10).select`*`
+  .toQuery(); //=> ["select * from posts limit ?", 10]
+```
+
+Except for clauses that lack precedence information, like `sql`:
+
+```js
+// Bad idea, it won't work:
+from`posts`.sql`select *`
+  .toQuery(); //=> ["from posts select *"]
+```
+
+Nested queries are flattened into the root query:
+
+```js
+const langs = ["en", "es", "jp"];
+const authors = from`authors`.select`id`.where`language in ${tuple(langs)}`;
+
+from`posts`.select`*`.where`author_id in (${authors})`
+  .toQuery(); //=> ["select * from posts where author_id in (select id from authors where language in (?, ?, ?))", "en", "es", "jp"]
 ```
 
 ## Legal
