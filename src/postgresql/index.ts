@@ -14,6 +14,7 @@ import * as returning from "../common/returning.ts";
 import * as select from "../common/select.ts";
 import * as set from "../common/set.ts";
 import * as sql from "../common/sql.ts";
+import * as tuple from "../common/tuple.ts";
 import * as update from "../common/update.ts";
 import * as values from "../common/values.ts";
 import * as where from "../common/where.ts";
@@ -39,6 +40,7 @@ export const postgresql = {
     select,
     set,
     sql,
+    tuple,
     update,
     values,
     where,

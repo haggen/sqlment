@@ -14,6 +14,7 @@ import * as returning from "./returning.ts";
 import * as select from "./select.ts";
 import * as set from "./set.ts";
 import * as sql from "./sql.ts";
+import * as tuple from "./tuple.ts";
 import * as update from "./update.ts";
 import * as values from "./values.ts";
 import * as where from "./where.ts";
@@ -39,6 +40,7 @@ export const common = {
     select,
     set,
     sql,
+    tuple,
     update,
     values,
     where,
