@@ -1,17 +1,17 @@
 # Sqlment
 
-Sqlment is a lightweight query builder for TypeScript. It tries to capture some of the power of more complex builders while sticking closer to hand-written SQL.
+Sqlment is a lightweight query builder for TypeScript. It aims to capture some of the power of more complex builders while staying closer to hand-written SQL.
 
 - 🪶 Zero dependencies.
-- 👨‍✈️ Bring your own driver.
+- 🔌 Bring your own driver.
 - 🧱 Compose queries by combining clauses.
-- 🔗 Mutate queries with chained calls.
+- 🔗 Build queries with chained calls.
 - 🪆 Support for nested clauses and subqueries.
 - 🗣️ Configurable for almost any SQL dialect.
 
 ## Usage
 
-Create a new factory, passing a configuration object:
+Create a new factory by passing a configuration object:
 
 ```js
 import { Sqlment } from "sqlment";
@@ -20,7 +20,7 @@ import { sqlite } from "sqlment/sqlite";
 const sqlment = new Sqlment(sqlite);
 ```
 
-You create queries via starter functions, and compile with `toQuery()` method:
+You create queries via starter functions and compile them with the `toQuery()` method:
 
 ```js
 const { sql, select, ... } = sqlment.starters();
@@ -29,7 +29,7 @@ sql`select * from posts`
   .toQuery() //=> ["select * from posts"];
 ```
 
-Queries are mutable and methods are chainable:
+Queries are mutable, and methods are chainable:
 
 ```js
 select`*`.from`posts`.where`author_id = ${1}`
@@ -46,14 +46,14 @@ select`posts.*`.from`posts`.merge(withAuthor)
   .toQuery(); //=> ["select posts.*, authors.name as author from posts join authors on posts.author_id = authors.id"];
 ```
 
-Doesn't matter which order calls are made:
+The order in which calls are made doesn't matter:
 
 ```js
 from`posts`.limit(10).select`*`
   .toQuery(); //=> ["select * from posts limit ?", 10]
 ```
 
-Except for clauses that lack precedence information, like `sql`:
+Except for clauses that lack precedence information, such as `sql`:
 
 ```js
 // Bad idea, it won't work:
